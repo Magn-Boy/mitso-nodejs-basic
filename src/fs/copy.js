@@ -1,31 +1,42 @@
 import { promises as fs } from 'fs';
-// Закончить асинхронную функцию, ошибка не известная, узнать почему не копируются файлы с одного католога в другой
+
 const copy = async () => {
     const sourceDirectory = './files';
     const destinationDirectory = './files_copy';
     
     try {
-        await fs.access(sourceDirectory);
-        await fs.access(destinationDirectory);
-        throw new Error('Каталоги уже существуют');
+        await fs.mkdir(destinationDirectory);
     } catch (error) {
-        if (error.code !== 'ENOENT') throw new Error ('FS operation failed')
+        if (error.code !== 'File exists') throw new Error('FS operation failed');
     }
 
-    await fs.mkdir(destinationDirectory);
-    const files = await fs.readdir(sourceDirectory);
-
-    await Promise.all(files.map( async (file) => {
-        const sourceFile = '${sourceDirectory}/${file}';
-        const destinationFile = '${destinationDirectory}/${file}';
-        await fs.copyFile(sourceFile, destinationFile);
-    })); 
-    console.log('Все файлы скопированы успешно');
-
+    let files;
     try {
-        await copy();
+        files = await fs.readdir(sourceDirectory);
     } catch (error) {
-        console.error(error.message);
+        throw new Error(`Failed to read source directory: ${error.message}`);
     }
+
+    await Promise.all(files.map(async (file) => {
+        const sourceFile = `${sourceDirectory}/${file}`;
+        const destinationFile = `${destinationDirectory}/${file}`;
+
+        console.log(`Copying file ${sourceFile} to ${destinationFile}`);
+
+        try {
+            await fs.copyFile(sourceFile, destinationFile);
+            console.log(`File ${file} copied successfully`);
+        } catch (error) {
+            console.error(`Error copying file ${file}: ${error.message}`);
+        }
+    }));
+
+    console.log('All files copied successfully');
 };
+
+try {
+    await copy();
+} catch (error) {
+    console.error(error.message);
+}
 
