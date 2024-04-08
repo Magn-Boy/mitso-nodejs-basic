@@ -1,5 +1,19 @@
+import fs from 'fs';
+
 const read = async () => {
-    // Write your code here 
+    const readStream = fs.createReadStream('./files/fileToRead.txt');
+
+    readStream.on('data', (chunk) => {
+        process.stdout.write(chunk);
+    });
+
+    readStream.on('end', () => {
+        console.log('\nEnd of file');
+    });
+
+    readStream.on('error', (error) => {
+        console.error(`Error reading file: ${error.message}`);
+    });
 };
 
 await read();
